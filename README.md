@@ -31,6 +31,10 @@ Please cite the original MedQA paper ([Jin, Di, et al. "What Disease does this P
 > 
 > Our challenge, then, is to craft a world for our children where peace is not a distant aspiration, but a carefully cultivated reality. This requires us to recognize the humanity in all people, even those whose governments we oppose. May our children inherit a world where peace is not just a dream, but a reality we've worked tirelessly to create.
 
+# MedQA-BBY Description 
+Utilising 40 labelled instances (development set), we identified the optimal OpenAI model, prompt, and temperature settings for performing four text classification tasks: system/organ, discipline, medicine-or-pharmacy, and sub-speciality. We then employed GPT-4 for initial labeling. Subsequently, each question underwent review by an MD graduate during the enrichment phase. This process involved adding one contradictory answer and one additional correct answer to the list of options. Finally, another MD-level reviewer conducted a second check of all options to ensure accuracy and consistency.
+
+
 # Special thanks
 
 - Thanks to Jin Di et al. for providing the MedQA dataset ([paper](https://arxiv.org/abs/2009.13081), [github](https://github.com/jind11/MedQA?tab=readme-ov-file))
