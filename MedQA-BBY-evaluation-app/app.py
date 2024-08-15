@@ -7,8 +7,10 @@ import os
 
 def load_jsonl(file):
     data = []
-    for line in file:
-        data.append(json.loads(line))
+    content = file.read().decode('utf-8')
+    for line in content.split('\n'):
+        if line.strip():
+            data.append(json.loads(line))
     return data
 
 def save_jsonl(data):
@@ -24,7 +26,12 @@ def save_jsonl(data):
     return content
 
 def rtl_text_area(label, value, height, key):
-    return st.text_area(label, value, height=height, key=key)
+    return st.markdown(f"""
+    <div dir="rtl">
+        <p>{label}</p>
+        <textarea style="width: 100%; height: {height}px; direction: rtl; text-align: right;" name="{key}" id="{key}">{value}</textarea>
+    </div>
+    """, unsafe_allow_html=True)
 
 def get_unique_labels(data, key):
     unique_labels = set()
@@ -62,9 +69,13 @@ st.title("MedQA Translation and Enrichment App")
 # Apply RTL styling only to specific elements
 st.markdown("""
 <style>
-    .rtl textarea {
+    .rtl {
         direction: rtl;
         text-align: right;
+    }
+    textarea {
+        font-size: 14px;
+        font-family: Arial, sans-serif;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -82,9 +93,9 @@ if uploaded_file is not None:
     data = load_jsonl(uploaded_file)
     
     # Get unique labels
-    unique_topic_systems = get_unique_labels(data, 'meta_info_TopicSystem')
-    unique_topic_disciplines = get_unique_labels(data, 'meta_info_TopicDiscipline')
-    unique_subspecialities = get_unique_labels(data, 'meta_info_SubSpeciality')
+    unique_topic_systems = r"Endocrine System,  Nervous System,  Gastrointestinal System, Cardiovascular System,  Musculoskeletal System & Skin,  Respiratory System,  Renal & Urinary System,  Hematologic System,  Immune System,  Psychiatry & Behavioral Health,  General Principles,  Biochemistry,  Ophthalmic system,  Pediatrics,  Behavioral Health,  Biostatistics & Epidemiology,  Reproductive System"
+    unique_topic_disciplines = r"Clinical Diagnosis and Management,  Pharmacology,  Pathology,  Microbiology and Immunology,  Genetics,  Epidemiology and Biostatistics,  Physiology,  Biochemistry,  Anatomy,  Ethics,  Embryology,  Cognitive Skills,  Preventive Medicine,  Psychology,  Pediatrics,  Nutrition, Pyschology"
+    unique_subspecialities = r"Pediatrics,  Gastroenterology,  Obstetrics & Gynecology,  Endocrinology, Neurology,  Infectious Diseases,  Hematology,  Cardiology,  Pulmonology,  Emergency Medicine,  Psychiatry,  Nephrology,  Rheumatology,  Surgery,  Internal Medicine,  Dermatology,  Allergy & Immunology,  Urology,  Geriatrics,  Education & Management,  Critical Care,  Ophthalmology, Anesthesiology,  Otolaryngology,  Infection Diseases,  Orthopedic Surgery,  Pathology,  Sports Medicine"
     
     # Create tabs for each question
     tabs = st.tabs([f"Question {idx + 1}" for idx in range(len(data))])
@@ -102,8 +113,9 @@ if uploaded_file is not None:
                 persian_question_height,
                 key=f"persian_q_{idx}"
             )
+            st.write(f'Correct answer is: ✔️**{item['answer']}**')
             
-            st.write("Options:")
+            st.subheader("Options:")
             for opt, text in item['options'].items():
                 col1, col2 = st.columns(2)
                 with col1:
@@ -116,7 +128,36 @@ if uploaded_file is not None:
                         key=f"persian_opt_{idx}_{opt}"
                     )
                 st.markdown("---")  # Add a separator between options
+
+            st.subheader("Revise Labels")
+            st.info("Provide multiple tags separated by ';'. Use items from the current list.")
             
+            for key, unique_labels in [
+                ('meta_info_TopicSystem', unique_topic_systems),
+                ('meta_info_TopicDiscipline', unique_topic_disciplines),
+                ('meta_info_SubSpeciality', unique_subspecialities)
+            ]:
+                label = key.replace('meta_info_', '')
+                current_value = item.get(key, '')
+                if isinstance(current_value, list):
+                    current_value = ';'.join(current_value)
+                
+                new_value = st.text_area(
+                    label,
+                    current_value,
+                    height=labels_height,
+                    key=f"{key}_{idx}"
+                )
+                st.write(f"*Current list*: {unique_labels}")
+                st.write("\n")
+                
+                # Convert back to list if necessary
+                if ';' in new_value:
+                    item[key] = [label.strip() for label in new_value.split(';') if label.strip()]
+                else:
+                    item[key] = [new_value] if new_value else []
+                    
+                                
             st.subheader("Enrich MedQA")
             
             # New contradictory option
@@ -147,32 +188,7 @@ if uploaded_file is not None:
                 key=f"add_correct_source_{idx}"
             )
             
-            st.subheader("Revise Labels")
-            st.write("Provide multiple tags separated by ';'. Use items from the current list.")
-            
-            for key, unique_labels in [
-                ('meta_info_TopicSystem', unique_topic_systems),
-                ('meta_info_TopicDiscipline', unique_topic_disciplines),
-                ('meta_info_SubSpeciality', unique_subspecialities)
-            ]:
-                label = key.replace('meta_info_', '')
-                current_value = item.get(key, '')
-                if isinstance(current_value, list):
-                    current_value = ';'.join(current_value)
-                
-                new_value = st.text_area(
-                    label,
-                    current_value,
-                    height=labels_height,
-                    key=f"{key}_{idx}"
-                )
-                st.write(f"Current list: {', '.join(unique_labels)}")
-                
-                # Convert back to list if necessary
-                if ';' in new_value:
-                    item[key] = [label.strip() for label in new_value.split(';') if label.strip()]
-                else:
-                    item[key] = [new_value] if new_value else []
+
             
             if st.button(f"Save Question {idx + 1}", key=f"save_{idx}"):
                 st.success(f"Changes for Question {idx + 1} saved successfully!")
