@@ -143,8 +143,8 @@ if uploaded_file is not None:
                         persian_option_height,
                         key=f"persian_opt_{idx}_{opt}"
                     )
-                st.markdown("---")  # Add a separator between options
 
+            st.markdown("--------")  
             st.subheader("Revise Labels")
             st.info("Provide multiple tags separated by ';'. Use items from the current list.")
             
@@ -173,14 +173,22 @@ if uploaded_file is not None:
                 else:
                     item[key] = [new_value] if new_value else []
                     
-                                
+            st.markdown("--------")                   
             st.subheader("Enrich MedQA")
             
+            # New question stem
+            item['new_question_stem'] = st.text_area(
+                "New question stem (in English)",
+                value=item.get('new_question_stem', item['question']),
+                height=persian_question_height,
+                key=f"new_question_stem_{idx}"
+            )
+                      
             # New contradictory option
-            item['new_contradictory_option'] = rtl_text_area(
-                "Contradictory option (in Persian)",
+            item['new_contradictory_option'] = st.text_area(
+                "Contradictory option (in English)",
                 item.get('new_contradictory_option', ''),
-                enrich_height,
+                height=enrich_height,
                 key=f"new_opt_{idx}"
             )
             item['new_contradictory_option_source'] = st.text_area(
@@ -191,10 +199,10 @@ if uploaded_file is not None:
             )
             
             # Additional correct answer
-            item['additional_correct_answer'] = rtl_text_area(
-                "Additional correct answer (in Persian)",
+            item['additional_correct_answer'] = st.text_area(
+                "Additional correct answer (in English)",
                 item.get('additional_correct_answer', ''),
-                enrich_height,
+                height=enrich_height,
                 key=f"add_correct_{idx}"
             )
             item['additional_correct_answer_source'] = st.text_area(
@@ -205,7 +213,7 @@ if uploaded_file is not None:
             )
             
 
-            
+            st.markdown("--------") 
             if st.button(f"Save Question {idx + 1}", key=f"save_{idx}"):
                 st.success(f"Changes for Question {idx + 1} saved successfully!")
 
