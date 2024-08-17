@@ -43,6 +43,6 @@ Utilising 40 labelled instances (development set), we identified the optimal Ope
 
 # Team Zone
 
-- Link to the app: [MedQA-BBY-app](https://medq-bby-app.streamlit.app/) 
+- Link to the app: [MedQA-BBY-app](https://medq-bby-eval-app.streamlit.app/) 
 - Link to [Google sheet and assigned batch for each person](https://docs.google.com/spreadsheets/d/1_NK8wMHkDgLfEx6VB_BY6YSvXpMQ_ls6Xzlai2h3pJ4/edit?usp=sharing)
 - Instruction (...loading)
