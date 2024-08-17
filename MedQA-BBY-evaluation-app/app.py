@@ -39,14 +39,14 @@ def save_jsonl(data):
     os.unlink(temp_file.name)
     return content
 
-    def rtl_text_area(label, value, height, key):
-        st.markdown(f"""
-        <div dir="rtl">
-            <p>{label}</p>
-            <textarea style="width: 100%; height: {height}px; direction: rtl; text-align: right;" name="{key}" id="{key}">{value}</textarea>
-        </div>
-        """, unsafe_allow_html=True)
-        return st.text_input(f"Hidden input for {label}", value=value, key=f"hidden_{key}", label_visibility="collapsed")
+def rtl_text_area(label, value, height, key):
+    st.markdown(f"""
+    <div dir="rtl">
+        <p>{label}</p>
+        <textarea style="width: 100%; height: {height}px; direction: rtl; text-align: right;" name="{key}" id="{key}">{value}</textarea>
+    </div>
+    """, unsafe_allow_html=True)
+    return st.text_input(f"Hidden input for {label}", value=value, key=f"hidden_{key}", label_visibility="collapsed")
 
 def get_unique_labels(data, key):
     unique_labels = set()
@@ -69,7 +69,7 @@ def display_and_edit_labels(item, key, unique_labels, height, idx):
         current_value,
         height=height,
         key=f"{key}_{idx}"
-    )
+    )   
     st.write(f"Current list: {', '.join(unique_labels)}")
     
     # Convert back to list if necessary
