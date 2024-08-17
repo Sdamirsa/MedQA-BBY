@@ -4,6 +4,8 @@ import pandas as pd
 from io import StringIO
 import tempfile
 import os
+from pathlib import Path
+
 
 def load_jsonl(file):
     data = []
@@ -13,10 +15,22 @@ def load_jsonl(file):
             data.append(json.loads(line))
     return data
 
+
+def serialize_streamlit(obj):
+    if isinstance(obj, (int, float, str, bool, type(None))):
+        return obj
+    elif isinstance(obj, list):
+        return [serialize_streamlit(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: serialize_streamlit(value) for key, value in obj.items()}
+    else:
+        return str(obj)
+
 def save_jsonl(data):
     with tempfile.NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as temp_file:
         for item in data:
-            json.dump(item, temp_file, ensure_ascii=False)
+            serialized_item = serialize_streamlit(item)
+            json.dump(serialized_item, temp_file, ensure_ascii=False)
             temp_file.write('\n')
     
     with open(temp_file.name, 'r', encoding='utf-8') as file:
@@ -25,13 +39,14 @@ def save_jsonl(data):
     os.unlink(temp_file.name)
     return content
 
-def rtl_text_area(label, value, height, key):
-    return st.markdown(f"""
-    <div dir="rtl">
-        <p>{label}</p>
-        <textarea style="width: 100%; height: {height}px; direction: rtl; text-align: right;" name="{key}" id="{key}">{value}</textarea>
-    </div>
-    """, unsafe_allow_html=True)
+    def rtl_text_area(label, value, height, key):
+        st.markdown(f"""
+        <div dir="rtl">
+            <p>{label}</p>
+            <textarea style="width: 100%; height: {height}px; direction: rtl; text-align: right;" name="{key}" id="{key}">{value}</textarea>
+        </div>
+        """, unsafe_allow_html=True)
+        return st.text_input(f"Hidden input for {label}", value=value, key=f"hidden_{key}", label_visibility="collapsed")
 
 def get_unique_labels(data, key):
     unique_labels = set()
@@ -82,19 +97,20 @@ st.markdown("""
 
 # Sidebar for settings
 st.sidebar.title("Settings")
-persian_question_height = st.sidebar.slider("Persian Question Height", min_value=100, max_value=500, value=200, step=50)
-persian_option_height = st.sidebar.slider("Persian Option Height", min_value=50, max_value=200, value=100, step=25)
-enrich_height = st.sidebar.slider("Enrich MedQA Text Height", min_value=50, max_value=200, value=100, step=25)
-labels_height = st.sidebar.slider("Labels Text Height", min_value=50, max_value=200, value=100, step=25)
+persian_question_height = st.sidebar.slider("Persian Question Height", min_value=100, max_value=500, value=150, step=50)
+persian_option_height = st.sidebar.slider("Persian Option Height", min_value=50, max_value=200, value=50, step=25)
+enrich_height = st.sidebar.slider("Enrich MedQA Text Height", min_value=50, max_value=200, value=50, step=25)
+labels_height = st.sidebar.slider("Labels Text Height", min_value=50, max_value=200, value=50, step=25)
 
 uploaded_file = st.file_uploader("Choose a JSONL file", type="jsonl")
 
 if uploaded_file is not None:
+    original_filename = uploaded_file.name
     data = load_jsonl(uploaded_file)
     
     # Get unique labels
     unique_topic_systems = r"Endocrine System,  Nervous System,  Gastrointestinal System, Cardiovascular System,  Musculoskeletal System & Skin,  Respiratory System,  Renal & Urinary System,  Hematologic System,  Immune System,  Psychiatry & Behavioral Health,  General Principles,  Biochemistry,  Ophthalmic system,  Pediatrics,  Behavioral Health,  Biostatistics & Epidemiology,  Reproductive System"
-    unique_topic_disciplines = r"Clinical Diagnosis and Management,  Pharmacology,  Pathology,  Microbiology and Immunology,  Genetics,  Epidemiology and Biostatistics,  Physiology,  Biochemistry,  Anatomy,  Ethics,  Embryology,  Cognitive Skills,  Preventive Medicine,  Psychology,  Pediatrics,  Nutrition, Pyschology"
+    unique_topic_disciplines = "Clinical Diagnosis and Management, **Diagnosis, Management, Investigation**, Pharmacology,  Pathology,  Microbiology and Immunology,  Genetics,  Epidemiology and Biostatistics,  Physiology,  Biochemistry,  Anatomy,  Ethics,  Embryology,  Cognitive Skills,  Preventive Medicine,  Psychology,  Pediatrics,  Nutrition, Pyschology"
     unique_subspecialities = r"Pediatrics,  Gastroenterology,  Obstetrics & Gynecology,  Endocrinology, Neurology,  Infectious Diseases,  Hematology,  Cardiology,  Pulmonology,  Emergency Medicine,  Psychiatry,  Nephrology,  Rheumatology,  Surgery,  Internal Medicine,  Dermatology,  Allergy & Immunology,  Urology,  Geriatrics,  Education & Management,  Critical Care,  Ophthalmology, Anesthesiology,  Otolaryngology,  Infection Diseases,  Orthopedic Surgery,  Pathology,  Sports Medicine"
     
     # Create tabs for each question
@@ -193,12 +209,17 @@ if uploaded_file is not None:
             if st.button(f"Save Question {idx + 1}", key=f"save_{idx}"):
                 st.success(f"Changes for Question {idx + 1} saved successfully!")
 
-    if st.button("Save All Changes"):
+    if st.button("Export Modified File"):
         output = save_jsonl(data)
+        
+        # Generate the new filename
+        base_name = Path(original_filename).stem
+        new_filename = f"{base_name}_modified.jsonl"
+        
         st.download_button(
             label="Download modified JSONL",
             data=output,
-            file_name="modified_medqa.jsonl",
+            file_name=new_filename,
             mime="application/json"
         )
 
